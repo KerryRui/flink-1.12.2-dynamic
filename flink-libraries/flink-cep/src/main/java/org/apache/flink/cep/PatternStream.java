@@ -51,6 +51,20 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class PatternStream<T> {
 
+    private PatternListener<T> patternListener;
+
+    /**
+     * @Description: 用于注册我们的监听cep规则变化的监听对象
+     *
+     * @param: [cepListener]
+     * @return: org.apache.flink.cep.PatternStream
+     * @date: 2022/8/26 9:50
+     */
+    public PatternStream<T> registerListener(PatternListener<T> patternListener) {
+        this.patternListener = patternListener;
+        return this;
+    }
+
     private final PatternStreamBuilder<T> builder;
 
     private PatternStream(final PatternStreamBuilder<T> builder) {
@@ -129,7 +143,13 @@ public class PatternStream<T> {
     public <R> SingleOutputStreamOperator<R> process(
             final PatternProcessFunction<T, R> patternProcessFunction,
             final TypeInformation<R> outTypeInfo) {
-
+        //    这个方法会创建真正的nfafactory包含nfa.statue
+        //	  先判断client端是否register了,然后就注入进去了
+        //		------------
+        if (patternListener != null) {
+            patternProcessFunction.registerListener(patternListener);
+        }
+        //		------------
         return builder.build(outTypeInfo, builder.clean(patternProcessFunction));
     }
 
@@ -181,6 +201,8 @@ public class PatternStream<T> {
 
         final PatternProcessFunction<T, R> processFunction =
                 fromSelect(builder.clean(patternSelectFunction)).build();
+
+
 
         return process(processFunction, outTypeInfo);
     }
@@ -289,10 +311,10 @@ public class PatternStream<T> {
      *     pattern sequence.
      * @param <L> Type of the resulting timeout elements
      * @param <R> Type of the resulting elements
-     * @deprecated Use {@link PatternStream#select(OutputTag, PatternTimeoutFunction,
-     *     PatternSelectFunction)} that returns timed out events as a side-output
      * @return {@link DataStream} which contains the resulting elements or the resulting timeout
      *     elements wrapped in an {@link Either} type.
+     * @deprecated Use {@link PatternStream#select(OutputTag, PatternTimeoutFunction,
+     *     PatternSelectFunction)} that returns timed out events as a side-output
      */
     @Deprecated
     public <L, R> SingleOutputStreamOperator<Either<L, R>> select(
@@ -495,11 +517,11 @@ public class PatternStream<T> {
      *     detected pattern sequence.
      * @param <L> Type of the resulting timeout events
      * @param <R> Type of the resulting events
-     * @deprecated Use {@link PatternStream#flatSelect(OutputTag, PatternFlatTimeoutFunction,
-     *     PatternFlatSelectFunction)} that returns timed out events as a side-output
      * @return {@link DataStream} which contains the resulting events from the pattern flat select
      *     function or the resulting timeout events from the pattern flat timeout function wrapped
      *     in an {@link Either} type.
+     * @deprecated Use {@link PatternStream#flatSelect(OutputTag, PatternFlatTimeoutFunction,
+     *     PatternFlatSelectFunction)} that returns timed out events as a side-output
      */
     @Deprecated
     public <L, R> SingleOutputStreamOperator<Either<L, R>> flatSelect(

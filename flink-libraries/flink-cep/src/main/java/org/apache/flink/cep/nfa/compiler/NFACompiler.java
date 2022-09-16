@@ -132,7 +132,7 @@ public class NFACompiler {
      *
      * @param <T>
      */
-    static class NFAFactoryCompiler<T> {
+    public static class NFAFactoryCompiler<T> {
 
         private final NFAStateNameHandler stateNameHandler = new NFAStateNameHandler();
         private final Map<String, State<T>> stopStates = new HashMap<>();
@@ -146,7 +146,7 @@ public class NFACompiler {
         private final AfterMatchSkipStrategy afterMatchSkipStrategy;
         private Map<String, State<T>> originalStateMap = new HashMap<>();
 
-        NFAFactoryCompiler(final Pattern<T, ?> pattern) {
+        public NFAFactoryCompiler(final Pattern<T, ?> pattern) {
             this.currentPattern = pattern;
             afterMatchSkipStrategy = pattern.getAfterMatchSkipStrategy();
             windowTime = Optional.empty();
@@ -156,7 +156,7 @@ public class NFACompiler {
          * Compiles the given pattern into a {@link NFAFactory}. The NFA factory can be used to
          * create multiple NFAs.
          */
-        void compileFactory() {
+        public void compileFactory() {
             if (currentPattern.getQuantifier().getConsumingStrategy()
                     == Quantifier.ConsumingStrategy.NOT_FOLLOW) {
                 throw new MalformedPatternException(
